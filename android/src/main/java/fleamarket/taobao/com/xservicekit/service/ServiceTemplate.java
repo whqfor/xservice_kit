@@ -1,7 +1,7 @@
 package fleamarket.taobao.com.xservicekit.service;
 
 
-import android.util.Log;
+import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,13 +20,13 @@ import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
-public class ServiceTemplate implements Service,MessageHandler {
+public class ServiceTemplate implements Service, MessageHandler {
 
     private EventSink eventSink;
     private Object args;
     private MessageDispatcher mDispatcher;
     private String mName = "";
-    private Map<String,List<ServiceEventListner>> mEventListners = new HashMap<>();
+    private Map<String, List<ServiceEventListner>> mEventListners = new HashMap<>();
 
     public ServiceTemplate(String name) {
         mName = name;
@@ -65,7 +65,7 @@ public class ServiceTemplate implements Service,MessageHandler {
 
     @Override
     public void invoke(String name, Object args, String chanelName, MethodChannel.Result result) {
-        MessengerFacade.sharedInstance().sendMessage(name,args,chanelName,result);
+        MessengerFacade.sharedInstance().sendMessage(name, args, chanelName, result);
     }
 
     @Override
@@ -83,7 +83,7 @@ public class ServiceTemplate implements Service,MessageHandler {
         //Connect to message handlers.
         MessengerFacade.sharedInstance().setMethodCallHandler(new MethodChannel.MethodCallHandler() {
             @Override
-            public void onMethodCall(MethodCall methodCall, final MethodChannel.Result result) {
+            public void onMethodCall(@NonNull MethodCall methodCall, @NonNull final MethodChannel.Result result) {
                 FlutterMessageHost host = new FlutterMessageHost(ServiceTemplate.this.methodChannelName());
                 FlutterMessage msg = new FlutterMessage(methodCall.method, methodCall.arguments, host);
                 mDispatcher.dispatch(msg, new MessageResult() {
@@ -94,7 +94,7 @@ public class ServiceTemplate implements Service,MessageHandler {
 
                     @Override
                     public void error(String var1, String var2, Object var3) {
-                        result.error(var1,var2,var3);
+                        result.error(var1, var2, var3);
                     }
 
                     @Override
@@ -136,8 +136,8 @@ public class ServiceTemplate implements Service,MessageHandler {
 
     @Override
     public void end() {
-        MessengerFacade.sharedInstance().setMethodCallHandler(null,this.methodChannelName());
-        MessengerFacade.sharedInstance().setStreamHandler(null,this.eventChannelName());
+        MessengerFacade.sharedInstance().setMethodCallHandler(null, this.methodChannelName());
+        MessengerFacade.sharedInstance().setStreamHandler(null, this.eventChannelName());
     }
 
     @Override
@@ -148,8 +148,7 @@ public class ServiceTemplate implements Service,MessageHandler {
     }
 
 
-
-    private Map checkType(Map param){
+    private Map checkType(Map param) {
 
         /*
         int -> int
@@ -159,26 +158,26 @@ public class ServiceTemplate implements Service,MessageHandler {
         List -> List
         Map -> Map
         * */
-        final Map<String,Boolean> supporedType = new HashMap<>();
-        supporedType.put("Integer",true);
-        supporedType.put("Double",true);
-        supporedType.put("Boolean",true);
-        supporedType.put("String",true);
+        final Map<String, Boolean> supporedType = new HashMap<>();
+        supporedType.put("Integer", true);
+        supporedType.put("Double", true);
+        supporedType.put("Boolean", true);
+        supporedType.put("String", true);
 
 
         Iterator it = param.entrySet().iterator();
         while (it.hasNext()) {
 
-            Map.Entry pair = (Map.Entry)it.next();
+            Map.Entry pair = (Map.Entry) it.next();
 
             //For null values.
-            if(pair == null || pair.getKey() == null || pair.getValue() == null) continue;
+            if (pair == null || pair.getKey() == null || pair.getValue() == null) continue;
 
             String typeName = pair.getValue().getClass().getSimpleName();
-            if (pair.getValue() instanceof Map<?,?> || pair.getValue() instanceof List<?>){
+            if (pair.getValue() instanceof Map<?, ?> || pair.getValue() instanceof List<?>) {
                 //Do nothing.
-            }else{
-                if (!supporedType.get(pair.getValue().getClass().getSimpleName())){
+            } else {
+                if (!supporedType.get(pair.getValue().getClass().getSimpleName())) {
                     //remove unsuppored type.
                     it.remove();
                 }
@@ -193,7 +192,7 @@ public class ServiceTemplate implements Service,MessageHandler {
 
     @Override
     public boolean onMethodCall(String name, Map args, MessageResult result) {
-        this.onEvent((String) args.get("event"),(Map) args.get("params"));
+        this.onEvent((String) args.get("event"), (Map) args.get("params"));
         return true;
     }
 
@@ -219,27 +218,27 @@ public class ServiceTemplate implements Service,MessageHandler {
         return this.serviceName();
     }
 
-    private void onEvent(String event , Map params){
-        if(event == null){
+    private void onEvent(String event, Map params) {
+        if (event == null) {
             return;
         }
 
         List<ServiceEventListner> listners = mEventListners.get(event);
-        if(listners != null){
-            for(ServiceEventListner l : listners){
-                l.onEvent(event,params);
+        if (listners != null) {
+            for (ServiceEventListner l : listners) {
+                l.onEvent(event, params);
             }
         }
     }
 
     @Override
     public void emitEvent(String even, Map obj) {
-        if(even == null) return;
+        if (even == null) return;
 
-        Map<Object,Object> msg = new HashMap<>();
-        msg.put("event",even);
-        if(obj != null){
-            msg.put("params",obj);
+        Map<Object, Object> msg = new HashMap<>();
+        msg.put("event", even);
+        if (obj != null) {
+            msg.put("params", obj);
         }
 
         this.invoke("__event__", msg, methodChannelName(), new MethodChannel.Result() {
@@ -259,14 +258,14 @@ public class ServiceTemplate implements Service,MessageHandler {
 
     @Override
     public void addEventListner(String event, ServiceEventListner listner) {
-        if(event == null || listner == null){
+        if (event == null || listner == null) {
             return;
         }
 
         List<ServiceEventListner> listners = mEventListners.get(event);
-        if(listners == null){
+        if (listners == null) {
             listners = new ArrayList<>();
-            mEventListners.put(event,listners);
+            mEventListners.put(event, listners);
         }
 
         listners.add(listner);
@@ -274,12 +273,12 @@ public class ServiceTemplate implements Service,MessageHandler {
 
     @Override
     public void removeEventListner(String event, ServiceEventListner listner) {
-        if(event == null || listner == null){
+        if (event == null || listner == null) {
             return;
         }
 
         List<ServiceEventListner> listners = mEventListners.get(event);
-        if(listners != null){
+        if (listners != null) {
             listners.remove(listner);
         }
     }
